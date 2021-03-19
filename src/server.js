@@ -51,15 +51,17 @@ wss.on("connection", (socket) => {
         }))
     }
 
-    enviarMensagem('Bem vindo ao restaurante, Deliciousocket :)', "info")
-    // socket.send('Digite o número correspondente ao seu pedido');
-    // socket.send('-------***-------***-------***-------***-------***-------');
-    // socket.send('1 - Macarrão');
-    // socket.send('2 - Feijão');
-    // socket.send('3 - Cachorro quente');
-    // socket.send('4 - Pizza');
-
-
+    enviarMensagem('Bem vindo ao restaurante, Deliciousocket :)', "cardapio")
+    enviarMensagem('---------------------------------------------------', "cardapio")
+    enviarMensagem('Digite o número correspondente ao seu pedido :)', "cardapio")
+    enviarMensagem('---------------------------------------------------', "cardapio")
+    foods.map(item=>{
+        enviarMensagem(`${item.index} - ${item.name} - Valor: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,"cardapio")
+    })
+    // enviarMensagem('1 - Macarrão', "cardapio")
+    // enviarMensagem('2 - Feijão', "cardapio")
+    // enviarMensagem('3 - Cachorro quente', "cardapio")
+    // enviarMensagem('4 - Pizza', "cardapio")
 
     socket.on("message", (message_stringfy) => {
         // código que o servidor vai executar quando receber uma mensagem
@@ -68,13 +70,32 @@ wss.on("connection", (socket) => {
         var message = message_parse.message
         var type = message_parse.type
 
-        if (type == "excluir") {
+        if (type === "sugestao") {
+            valor = Math.floor(Math.random() * (40 - 20)) + 20
+            foods.push({
+                "index": foods.length+1,
+                "name": message,
+                "value": valor
+            })
+            enviarMensagem(`${foods.length} - ${message} - Valor: ${valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, "cardapio")
+        }
+
+        if (type === "excluir") {
             pedido = pedido.filter(item => item.index !== message)
             enviarMensagem('Ok, Excluir pedido de ' + foods[(message - 1)].name, "info")
+            if(pedido.quantity===0){
+                enviarMensagem('Ok, Excluir pedido de ' + foods[(message - 1)].name, "excluir")
+            }
+        }
+
+        if(type==="diminuir"){
+            const findFoodIndex = pedido.findIndex(item => item.index === message)
+            pedido[findFoodIndex] = { ...pedido[findFoodIndex], quantity: pedido[findFoodIndex].quantity - 1 }
+            enviarMensagem(pedido[findFoodIndex], "diminuir")
         }
 
         if (type == "escolher") {
-            if (message > 4) {
+            if (message > foods.length) {
                 enviarMensagem('Inválido', "info")
             } else {
                 console.log("Cliente vai querer: " + foods[(message - 1)].name);

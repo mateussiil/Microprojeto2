@@ -11,18 +11,27 @@
 
 <body>
     <div style="display: flex;flex-direction: row;">
-        <div>
-            Pedido:
-            <input id="caixadetexto" type="text">
-            <input id="botao" type="button" onclick="meuClick()" value="Ok">
-            <div id="texto"></div>
-        </div>
-        <div>
-            <ul id="carrinho"></ul>
-            <div id="valorTotal"></div>
-        </div>
-        <div>
-        </div>
+        <div style="display: flex;flex-direction: column;">
+            <div id="cardapio">
+            </div>
+            <div style="margin-top: 30px;">
+                Opa, tem uma sugestao pro cardápio? insira aqui:
+                <input id="fazerSugestao" type="text">
+                <input id="botao" type="button" onclick="fazerSugestao()" value="ok">
+            </div>
+            <div style="margin-top: 30px;">
+                Pedido:
+                <input id="fazerPedido" type="text">
+                <input id="botao" type="button" onclick="fazerPedido()" value="Ok">
+                <div id="texto"></div>
+            </div>
+    </div>
+    <div style="margin-left: 30px;">
+        <ul id="carrinho"></ul>
+        <div id="valorTotal"></div>
+    </div>
+    <div>
+    </div>
 </body>
 <script>
     var HOST = location.origin.replace(/^http/, 'ws');
@@ -38,6 +47,13 @@
         var type = message_parse.type
         var message = message_parse.message
 
+        if (type === "cardapio") {
+            var minhaDiv = document.querySelector("#cardapio");
+
+            var textNode = document.createElement("div")
+            textNode.innerHTML = `${message}`;
+            minhaDiv.appendChild(textNode);
+        }
 
         if (type === "info") {
             var minhaDiv = document.querySelector("#texto");
@@ -52,6 +68,25 @@
             minhaDiv.innerHTML = `${message}`;
         }
 
+        if (type === "diminuir") {
+            var element = document.getElementById(`li-carrinho-item-${message.index}`)
+
+
+            if (element) {
+                element.innerHTML = `nome: ${message.name} quantidade:${message.quantity} valor:${message.value * message.quantity}`;
+            }
+
+            var text = element.innerHTML
+
+            var quantidade = (text.slice(text.indexOf("quantidade"), text.indexOf("valor")))
+            quantidade = quantidade.slice(quantidade.indexOf(":") + 1, quantidade.length-1 )
+            
+            if (quantidade==="0") {
+                element.parentNode.parentNode.removeChild(element.parentNode)
+            }
+            
+        }
+
         if (type === "carrinho") {
             var minhaDiv = document.querySelector("#carrinho");
 
@@ -62,8 +97,6 @@
             }
 
             if (!element) {
-                console.log('nao existe', message.name)
-
                 var divNode = document.createElement("div")
                 var liNode = document.createElement("li")
                 var buttonTrashNode = document.createElement("button")
@@ -71,16 +104,17 @@
 
                 buttonTrashNode.setAttribute("class", "fa fa-trash")
                 buttonTrashNode.setAttribute("id", `li-trash-item-${message.index}`)
-                buttonTrashNode.onclick = function (){
-                    console.log(buttonTrashNode.id.slice(buttonTrashNode.id.lastIndexOf('-')+1, buttonTrashNode.id.length ))
+                buttonTrashNode.onclick = function () {
                     enviarMensagem(message.index, 'excluir')
                     minhaDiv.removeChild(buttonTrashNode.parentNode)
                 }
 
                 minusTrashNode.setAttribute("class", "fa fa-minus")
-                buttonTrashNode.setAttribute("id", `li-minus-item-${message.index}`)
+                minusTrashNode.setAttribute("id", `li-minus-item-${message.index}`)
 
-                // minusTrashNode.onclick = diminuir()
+                minusTrashNode.onclick = function () {
+                    enviarMensagem(message.index, 'diminuir')
+                }
 
                 liNode.setAttribute("class", "li-carrinho")
                 liNode.setAttribute("id", `li-carrinho-item-${message.index}`)
@@ -95,12 +129,17 @@
         }
     }
 
-    const enviarMensagem = (message, type) =>{
-        socket.send(JSON.stringify({message:message, type:type}));
+    const enviarMensagem = (message, type) => {
+        socket.send(JSON.stringify({ message: message, type: type }));
     }
 
-    const meuClick = () => {
-        var caixaDeTexto = document.querySelector("#caixadetexto");
+    const fazerSugestao = () => {
+        var caixaDeTexto = document.querySelector("#fazerSugestao");
+        enviarMensagem(caixaDeTexto.value, 'sugestao')
+    }
+
+    const fazerPedido = () => {
+        var caixaDeTexto = document.querySelector("#fazerPedido");
         enviarMensagem(caixaDeTexto.value, 'escolher')
     }
 
