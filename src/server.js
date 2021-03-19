@@ -36,6 +36,8 @@ const foods = [
     },
 ]
 
+const user = []
+
 let pedido = []
 
 
@@ -44,7 +46,7 @@ wss.on("connection", (socket) => {
     // imprime uma mensagem quando um cliente conectar
     console.log("Cliente conectado!");
 
-    const enviarMensagem = (message, type) => {
+    const enviarMensagem = (message, type, objeto) => {
         socket.send(JSON.stringify({
             message: message,
             type: type
@@ -58,17 +60,17 @@ wss.on("connection", (socket) => {
     foods.map(item=>{
         enviarMensagem(`${item.index} - ${item.name} - Valor: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,"cardapio")
     })
-    // enviarMensagem('1 - Macarrão', "cardapio")
-    // enviarMensagem('2 - Feijão', "cardapio")
-    // enviarMensagem('3 - Cachorro quente', "cardapio")
-    // enviarMensagem('4 - Pizza', "cardapio")
-
+    
     socket.on("message", (message_stringfy) => {
-        // código que o servidor vai executar quando receber uma mensagem
 
         var message_parse = JSON.parse(message_stringfy)
         var message = message_parse.message
         var type = message_parse.type
+
+
+        if (type === "newUser") {
+            user.push({message, pedido:[]})
+        }
 
         if (type === "sugestao") {
             valor = Math.floor(Math.random() * (40 - 20)) + 20
@@ -77,7 +79,13 @@ wss.on("connection", (socket) => {
                 "name": message,
                 "value": valor
             })
-            enviarMensagem(`${foods.length} - ${message} - Valor: ${valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, "cardapio")
+
+            wss.clients.forEach((client) => {
+                client.send(JSON.stringify({
+                    message: `${foods.length} - ${message} - Valor: ${valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
+                    type: "cardapio"
+                }));
+            });
         }
 
         if (type === "excluir") {
@@ -114,6 +122,7 @@ wss.on("connection", (socket) => {
                 }
             }
         }
+
         enviarMensagem('Ta dando ' + pedido.reduce((total, item) => {
             return total + (item.value * item.quantity);
         }, 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), "valorTotal")

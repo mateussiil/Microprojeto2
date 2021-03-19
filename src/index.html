@@ -25,27 +25,40 @@
                 <input id="botao" type="button" onclick="fazerPedido()" value="Ok">
                 <div id="texto"></div>
             </div>
-    </div>
-    <div style="margin-left: 30px;">
-        <ul id="carrinho"></ul>
-        <div id="valorTotal"></div>
-    </div>
-    <div>
-    </div>
+        </div>
+        <div style="margin-left: 30px;">
+            <ul id="carrinho"></ul>
+            <div id="valorTotal"></div>
+        </div>
+        <div>
+        </div>
 </body>
 <script>
     var HOST = location.origin.replace(/^http/, 'ws');
-    console.log(HOST)
     const socket = new WebSocket(HOST);
 
-    // socket.onopen = () => {
-    //     socket.send("Olá mundo!");
-    // }
+    const create_UUID = () => {
+        var dt = new Date().getTime();
+        var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = (dt + Math.random() * 16) % 16 | 0;
+            dt = Math.floor(dt / 16);
+            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        return uuid;
+    }
+
+    const name = prompt('Bem vindo a Delisciousocket, deseja se identificar? Caso não queira, deixe vazio')
+
+    socket.onopen = () => {
+        const id = create_UUID()
+        enviarMensagem({ id: id, name: name ||= " " }, 'newUser')
+    }
 
     socket.onmessage = (message_stringfy) => {
         var message_parse = JSON.parse(message_stringfy.data)
         var type = message_parse.type
         var message = message_parse.message
+
 
         if (type === "cardapio") {
             var minhaDiv = document.querySelector("#cardapio");
@@ -79,12 +92,12 @@
             var text = element.innerHTML
 
             var quantidade = (text.slice(text.indexOf("quantidade"), text.indexOf("valor")))
-            quantidade = quantidade.slice(quantidade.indexOf(":") + 1, quantidade.length-1 )
-            
-            if (quantidade==="0") {
+            quantidade = quantidade.slice(quantidade.indexOf(":") + 1, quantidade.length - 1)
+
+            if (quantidade === "0") {
                 element.parentNode.parentNode.removeChild(element.parentNode)
             }
-            
+
         }
 
         if (type === "carrinho") {
