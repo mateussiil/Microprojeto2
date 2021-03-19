@@ -36,7 +36,7 @@ const foods = [
     },
 ]
 
-const user = []
+const users = []
 
 let pedido = []
 
@@ -57,10 +57,10 @@ wss.on("connection", (socket) => {
     enviarMensagem('---------------------------------------------------', "cardapio")
     enviarMensagem('Digite o número correspondente ao seu pedido :)', "cardapio")
     enviarMensagem('---------------------------------------------------', "cardapio")
-    foods.map(item=>{
-        enviarMensagem(`${item.index} - ${item.name} - Valor: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,"cardapio")
+    foods.map(item => {
+        enviarMensagem(`${item.index} - ${item.name} - Valor: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, "cardapio")
     })
-    
+
     socket.on("message", (message_stringfy) => {
 
         var message_parse = JSON.parse(message_stringfy)
@@ -69,13 +69,13 @@ wss.on("connection", (socket) => {
 
 
         if (type === "newUser") {
-            user.push({message, pedido:[]})
+            users.push({ ...message, pedido: [] })
         }
 
         if (type === "sugestao") {
             valor = Math.floor(Math.random() * (40 - 20)) + 20
             foods.push({
-                "index": foods.length+1,
+                "index": foods.length + 1,
                 "name": message,
                 "value": valor
             })
@@ -89,36 +89,46 @@ wss.on("connection", (socket) => {
         }
 
         if (type === "excluir") {
-            pedido = pedido.filter(item => item.index !== message)
-            enviarMensagem('Ok, Excluir pedido de ' + foods[(message - 1)].name, "info")
-            if(pedido.quantity===0){
+            const {index, user} = message
+            const userIndex = users.findIndex(item => item.id === user)
+
+            users[userIndex].pedido = users[userIndex].pedido.filter(item => item.index !== index)
+            enviarMensagem('Ok, Excluir pedido de ' + foods[(index - 1)].name, "info")
+            if (users[userIndex].pedido.quantity === 0) {
                 enviarMensagem('Ok, Excluir pedido de ' + foods[(message - 1)].name, "excluir")
             }
         }
 
-        if(type==="diminuir"){
-            const findFoodIndex = pedido.findIndex(item => item.index === message)
-            pedido[findFoodIndex] = { ...pedido[findFoodIndex], quantity: pedido[findFoodIndex].quantity - 1 }
-            enviarMensagem(pedido[findFoodIndex], "diminuir")
+        if (type === "diminuir") {
+            const {index, user} = message
+            const userIndex = users.findIndex(item => item.id === user)
+
+            const findFoodIndex = users[userIndex].pedido.findIndex(item => item.index === index)
+            users[userIndex].pedido[findFoodIndex] = { ...users[userIndex].pedido[findFoodIndex], quantity: users[userIndex].pedido[findFoodIndex].quantity - 1 }
+            enviarMensagem(users[userIndex].pedido[findFoodIndex], "diminuir")
         }
 
         if (type == "escolher") {
-            if (message > foods.length) {
+
+            const { id, pedido: pedidoId } = message
+
+            if (pedido > foods.length) {
                 enviarMensagem('Inválido', "info")
             } else {
-                console.log("Cliente vai querer: " + foods[(message - 1)].name);
-                enviarMensagem('Ok, 1 pedido de ' + foods[(message - 1)].name, "info")
+                const userIndex = users.findIndex(user => user.id === id)
+                console.log(`Cliente ${id} vai querer: ` + foods[(pedidoId - 1)].name);
+                enviarMensagem('Ok, 1 pedido de ' + foods[(pedidoId - 1)].name, "info")
 
-                const findFoodIndex = pedido.findIndex(item => item.index === foods[(message - 1)].index)
+                const findFoodIndex = users[userIndex].pedido.findIndex(item => item.index === foods[(pedidoId - 1)].index)
 
                 if (findFoodIndex >= 0) {
-                    pedido[findFoodIndex] = { ...pedido[findFoodIndex], quantity: pedido[findFoodIndex].quantity + 1 }
-                    enviarMensagem(pedido[findFoodIndex], "carrinho")
+                    console.log(users[userIndex])
+                    users[userIndex].pedido[findFoodIndex] = { ...users[userIndex].pedido[findFoodIndex], quantity: users[userIndex].pedido[findFoodIndex].quantity + 1 }
+                    enviarMensagem(users[userIndex].pedido[findFoodIndex], "carrinho")
 
                 } else {
-                    pedido.push({ ...foods[(message - 1)], quantity: 1 })
-                    enviarMensagem({ ...foods[(message - 1)], quantity: 1 }, "carrinho")
-
+                    users[userIndex].pedido.push({ ...foods[(pedidoId - 1)], quantity: 1 })
+                    enviarMensagem({ ...foods[(pedidoId - 1)], quantity: 1 }, "carrinho")
                 }
             }
         }

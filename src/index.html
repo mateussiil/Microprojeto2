@@ -48,17 +48,16 @@
     }
 
     const name = prompt('Bem vindo a Delisciousocket, deseja se identificar? Caso não queira, deixe vazio')
+    const id = create_UUID()
 
     socket.onopen = () => {
-        const id = create_UUID()
-        enviarMensagem({ id: id, name: name ||= " " }, 'newUser')
+        enviarMensagem({ id: id, name: name ? name : " " }, 'newUser')
     }
 
     socket.onmessage = (message_stringfy) => {
         var message_parse = JSON.parse(message_stringfy.data)
         var type = message_parse.type
         var message = message_parse.message
-
 
         if (type === "cardapio") {
             var minhaDiv = document.querySelector("#cardapio");
@@ -83,7 +82,6 @@
 
         if (type === "diminuir") {
             var element = document.getElementById(`li-carrinho-item-${message.index}`)
-
 
             if (element) {
                 element.innerHTML = `nome: ${message.name} quantidade:${message.quantity} valor:${message.value * message.quantity}`;
@@ -118,7 +116,8 @@
                 buttonTrashNode.setAttribute("class", "fa fa-trash")
                 buttonTrashNode.setAttribute("id", `li-trash-item-${message.index}`)
                 buttonTrashNode.onclick = function () {
-                    enviarMensagem(message.index, 'excluir')
+                    enviarMensagem({ index: message.index, user: id }, 'excluir')
+
                     minhaDiv.removeChild(buttonTrashNode.parentNode)
                 }
 
@@ -126,7 +125,7 @@
                 minusTrashNode.setAttribute("id", `li-minus-item-${message.index}`)
 
                 minusTrashNode.onclick = function () {
-                    enviarMensagem(message.index, 'diminuir')
+                    enviarMensagem({ index: message.index, user: id }, 'diminuir')
                 }
 
                 liNode.setAttribute("class", "li-carrinho")
@@ -153,7 +152,7 @@
 
     const fazerPedido = () => {
         var caixaDeTexto = document.querySelector("#fazerPedido");
-        enviarMensagem(caixaDeTexto.value, 'escolher')
+        enviarMensagem({pedido: caixaDeTexto.value, id:id}, 'escolher')
     }
 
 </script>
