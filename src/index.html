@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>WebSockets na disciplina de sistemas distribuídos</title>
+</head>
+
+<body>
+    <div style="display: flex;flex-direction: row;">
+        <div>
+            Pedido:
+            <input id="caixadetexto" type="text">
+            <input id="botao" type="button" onclick="meuClick()" value="Ok">
+            <div id="texto"></div>
+        </div>
+        <div>
+            <ul id="carrinho"></ul>
+            <div id="valorTotal"></div>
+        </div>
+        <div>
+        </div>
+</body>
+<script>
+    var HOST = location.origin.replace(/^http/, 'ws');
+    console.log(HOST)
+    const socket = new WebSocket(HOST);
+
+    // socket.onopen = () => {
+    //     socket.send("Olá mundo!");
+    // }
+
+    socket.onmessage = (message_stringfy) => {
+        var message_parse = JSON.parse(message_stringfy.data)
+        var type = message_parse.type
+        var message = message_parse.message
+
+
+        if (type === "info") {
+            var minhaDiv = document.querySelector("#texto");
+
+            var textNode = document.createElement("div")
+            textNode.innerHTML = `${message}`;
+            minhaDiv.appendChild(textNode);
+        }
+
+        if (type === "valorTotal") {
+            var minhaDiv = document.querySelector("#valorTotal");
+            minhaDiv.innerHTML = `${message}`;
+        }
+
+        if (type === "carrinho") {
+            var minhaDiv = document.querySelector("#carrinho");
+
+            var element = document.getElementById(`li-carrinho-item-${message.index}`)
+
+            if (element) {
+                element.innerHTML = `nome: ${message.name} quantidade:${message.quantity} valor:${message.value * message.quantity}`;
+            }
+
+            if (!element) {
+                console.log('nao existe', message.name)
+
+                var divNode = document.createElement("div")
+                var liNode = document.createElement("li")
+                var buttonTrashNode = document.createElement("button")
+                var minusTrashNode = document.createElement("button")
+
+                buttonTrashNode.setAttribute("class", "fa fa-trash")
+                buttonTrashNode.setAttribute("id", `li-trash-item-${message.index}`)
+                buttonTrashNode.onclick = function (){
+                    console.log(buttonTrashNode.id.slice(buttonTrashNode.id.lastIndexOf('-')+1, buttonTrashNode.id.length ))
+                    enviarMensagem(message.index, 'excluir')
+                    minhaDiv.removeChild(buttonTrashNode.parentNode)
+                }
+
+                minusTrashNode.setAttribute("class", "fa fa-minus")
+                buttonTrashNode.setAttribute("id", `li-minus-item-${message.index}`)
+
+                // minusTrashNode.onclick = diminuir()
+
+                liNode.setAttribute("class", "li-carrinho")
+                liNode.setAttribute("id", `li-carrinho-item-${message.index}`)
+                liNode.innerHTML = `nome: ${message.name} quantidade:${message.quantity} valor:${message.value * message.quantity}`;
+
+                divNode.appendChild(liNode)
+                divNode.appendChild(minusTrashNode)
+                divNode.appendChild(buttonTrashNode)
+
+                minhaDiv.appendChild(divNode);
+            }
+        }
+    }
+
+    const enviarMensagem = (message, type) =>{
+        socket.send(JSON.stringify({message:message, type:type}));
+    }
+
+    const meuClick = () => {
+        var caixaDeTexto = document.querySelector("#caixadetexto");
+        enviarMensagem(caixaDeTexto.value, 'escolher')
+    }
+
+</script>
+
+</html>
