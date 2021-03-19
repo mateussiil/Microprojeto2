@@ -95,7 +95,6 @@
             if (quantidade === "0") {
                 element.parentNode.parentNode.removeChild(element.parentNode)
             }
-
         }
 
         if (type === "carrinho") {
@@ -116,7 +115,7 @@
                 buttonTrashNode.setAttribute("class", "fa fa-trash")
                 buttonTrashNode.setAttribute("id", `li-trash-item-${message.index}`)
                 buttonTrashNode.onclick = function () {
-                    enviarMensagem({ index: message.index, user: id }, 'excluir')
+                    enviarMensagem({ message_: message.index, user: id }, 'excluir')
 
                     minhaDiv.removeChild(buttonTrashNode.parentNode)
                 }
@@ -125,7 +124,7 @@
                 minusTrashNode.setAttribute("id", `li-minus-item-${message.index}`)
 
                 minusTrashNode.onclick = function () {
-                    enviarMensagem({ index: message.index, user: id }, 'diminuir')
+                    enviarMensagem({ message_: message.index, user: id }, 'diminuir')
                 }
 
                 liNode.setAttribute("class", "li-carrinho")
@@ -147,12 +146,12 @@
 
     const fazerSugestao = () => {
         var caixaDeTexto = document.querySelector("#fazerSugestao");
-        enviarMensagem(caixaDeTexto.value, 'sugestao')
+        enviarMensagem({message_: caixaDeTexto.value, user:id}, 'sugestao')
     }
 
     const fazerPedido = () => {
         var caixaDeTexto = document.querySelector("#fazerPedido");
-        enviarMensagem({pedido: caixaDeTexto.value, id:id}, 'escolher')
+        enviarMensagem({message_: caixaDeTexto.value, user:id}, 'escolher')
     }
 
 </script>

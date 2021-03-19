@@ -52,11 +52,11 @@ wss.on("connection", (socket) => {
             type: type
         }))
     }
-
     enviarMensagem('Bem vindo ao restaurante, Deliciousocket :)', "cardapio")
     enviarMensagem('---------------------------------------------------', "cardapio")
     enviarMensagem('Digite o número correspondente ao seu pedido :)', "cardapio")
     enviarMensagem('---------------------------------------------------', "cardapio")
+
     foods.map(item => {
         enviarMensagem(`${item.index} - ${item.name} - Valor: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, "cardapio")
     })
@@ -67,6 +67,15 @@ wss.on("connection", (socket) => {
         var message = message_parse.message
         var type = message_parse.type
 
+        const { message_, user} = message
+        const userIndex = users.findIndex(item => item.id === user)
+
+
+        const valorTotal = () =>{
+            enviarMensagem('Ta dando ' + users[userIndex].pedido.reduce((total, item) => {
+                return total + (item.value * item.quantity);
+            }, 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), "valorTotal")
+        }
 
         if (type === "newUser") {
             users.push({ ...message, pedido: [] })
@@ -76,68 +85,55 @@ wss.on("connection", (socket) => {
             valor = Math.floor(Math.random() * (40 - 20)) + 20
             foods.push({
                 "index": foods.length + 1,
-                "name": message,
+                "name": message_,
                 "value": valor
             })
 
             wss.clients.forEach((client) => {
                 client.send(JSON.stringify({
-                    message: `${foods.length} - ${message} - Valor: ${valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
+                    message: `${foods.length} - ${message_} - Valor: ${valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
                     type: "cardapio"
                 }));
             });
         }
 
         if (type === "excluir") {
-            const {index, user} = message
-            const userIndex = users.findIndex(item => item.id === user)
-
-            users[userIndex].pedido = users[userIndex].pedido.filter(item => item.index !== index)
-            enviarMensagem('Ok, Excluir pedido de ' + foods[(index - 1)].name, "info")
-            if (users[userIndex].pedido.quantity === 0) {
-                enviarMensagem('Ok, Excluir pedido de ' + foods[(message - 1)].name, "excluir")
-            }
+            users[userIndex].pedido = users[userIndex].pedido.filter(item => item.index !== message_)
+            enviarMensagem('Ok, Excluir pedido de ' + foods[(message_ - 1)].name, "info")
+            valorTotal()
         }
 
         if (type === "diminuir") {
-            const {index, user} = message
-            const userIndex = users.findIndex(item => item.id === user)
-
-            const findFoodIndex = users[userIndex].pedido.findIndex(item => item.index === index)
+            const findFoodIndex = users[userIndex].pedido.findIndex(item => item.index === message_)
             users[userIndex].pedido[findFoodIndex] = { ...users[userIndex].pedido[findFoodIndex], quantity: users[userIndex].pedido[findFoodIndex].quantity - 1 }
             enviarMensagem(users[userIndex].pedido[findFoodIndex], "diminuir")
+            valorTotal()
         }
 
         if (type == "escolher") {
-
-            const { id, pedido: pedidoId } = message
-
-            if (pedido > foods.length) {
+            if (message_ > foods.length) {
                 enviarMensagem('Inválido', "info")
             } else {
-                const userIndex = users.findIndex(user => user.id === id)
-                console.log(`Cliente ${id} vai querer: ` + foods[(pedidoId - 1)].name);
-                enviarMensagem('Ok, 1 pedido de ' + foods[(pedidoId - 1)].name, "info")
+                console.log(`Cliente ${user} vai querer: ` + foods[(message_ - 1)].name);
+                enviarMensagem('Ok, 1 pedido de ' + foods[(message_ - 1)].name, "info")
 
-                const findFoodIndex = users[userIndex].pedido.findIndex(item => item.index === foods[(pedidoId - 1)].index)
+                const findFoodIndex = users[userIndex].pedido.findIndex(item => item.index === foods[(message_ - 1)].index)
 
                 if (findFoodIndex >= 0) {
-                    console.log(users[userIndex])
                     users[userIndex].pedido[findFoodIndex] = { ...users[userIndex].pedido[findFoodIndex], quantity: users[userIndex].pedido[findFoodIndex].quantity + 1 }
                     enviarMensagem(users[userIndex].pedido[findFoodIndex], "carrinho")
 
                 } else {
-                    users[userIndex].pedido.push({ ...foods[(pedidoId - 1)], quantity: 1 })
-                    enviarMensagem({ ...foods[(pedidoId - 1)], quantity: 1 }, "carrinho")
+                    users[userIndex].pedido.push({ ...foods[(message_ - 1)], quantity: 1 })
+                    enviarMensagem({ ...foods[(message_ - 1)], quantity: 1 }, "carrinho")
                 }
+
+                valorTotal()
             }
         }
 
-        enviarMensagem('Ta dando ' + pedido.reduce((total, item) => {
-            return total + (item.value * item.quantity);
-        }, 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), "valorTotal")
 
-
+   
         // envia a mensagem para todos os clientes conectados
         // wss.clients.forEach((client) => {
         //     client.send(message);
