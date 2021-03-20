@@ -170,7 +170,9 @@
         enviarMensagem({ message_: '', user: id }, 'finalizarPedido')
         var divPedido = document.querySelector("#divPedido");
         var ul = document.querySelector("#carrinho");
+        var valorTotal = document.querySelector("#valorTotal");
         var finalizado = document.querySelector("#finalizado");
+
         divPedido.parentNode.removeChild(divPedido)
         var filhos = ul.childNodes;
 
@@ -189,10 +191,8 @@
         finalizado.appendChild(NewUl)
         hora = Math.floor(Math.random() * (2 - 0)) + 0
         minuto = Math.floor(Math.random() * (59 - 1)) + 1
-        console.log(hora, minuto)
 
         horaDiv.innerHTML = `Seu pedido vai chegar em ${hora !== 0 ? hora === 1 ? hora + ' hora e ' : hora + ' horas e ' : ''} ${minuto} minutos`
-
 
         finalizado.appendChild(horaDiv)
 
@@ -210,7 +210,7 @@
             Newli.innerHTML = `Produto: ${produto} - Quantidade: ${quantidade} - Valor: ${valor}`;
             NewUl.appendChild(Newli)
         }
-
+        finalizado.appendChild(valorTotal)
         finalizado.appendChild(NewUl)
         finalizado.appendChild(newPedido)
     }
