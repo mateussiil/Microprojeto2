@@ -17,12 +17,7 @@
             <input id="btnConsultarCardapio" type="button" onclick="btnConsultarCardapio()" value="Consultar Cardápio">
             <div id="cardapio">
             </div>
-            <div style="margin-top: 30px;">
-                Opa, tem uma sugestao pro cardápio? insira aqui:
-                <input id="fazerSugestao" type="text">
-                <input type="button" onclick="fazerSugestao()" value="ok">
-            </div>
-            <div id="btnFazerPedido">
+            <div  style="margin-top: 30px;" id="btnFazerPedido">
 
             </div>
         </div>
@@ -93,12 +88,12 @@
             var element = document.getElementById(`li-carrinho-item-${message.index}`)
 
             if (element) {
-                element.innerHTML = `nome: ${message.name} quantidade:${message.quantity} valor:${message.value * message.quantity}`;
+                element.innerHTML = `Produto: ${message.name}. Quantidade: ${message.quantity} Valor:${(message.value * message.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
             }
 
             var text = element.innerHTML
 
-            var quantidade = (text.slice(text.indexOf("quantidade"), text.indexOf("valor")))
+            var quantidade = (text.slice(text.indexOf("Quantidade"), text.indexOf("valor")))
             quantidade = quantidade.slice(quantidade.indexOf(":") + 1, quantidade.length - 1)
 
             if (quantidade === "0") {
@@ -112,7 +107,7 @@
             var element = document.getElementById(`li-carrinho-item-${message.index}`)
 
             if (element) {
-                element.innerHTML = `nome: ${message.name} quantidade:${message.quantity} valor:${message.value * message.quantity}`;
+                element.innerHTML = `Produto: ${message.name} Quantidade:${message.quantity} Valor:${(message.value * message.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
             }
 
             if (!element) {
@@ -138,7 +133,9 @@
 
                 liNode.setAttribute("class", "li-carrinho")
                 liNode.setAttribute("id", `li-carrinho-item-${message.index}`)
-                liNode.innerHTML = `nome: ${message.name} quantidade:${message.quantity} valor:${message.value * message.quantity}`;
+                liNode.innerHTML = `Produto: ${message.name} Quantidade:${message.quantity} Valor:${(message.value * message.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+
+                // liNode.innerHTML = `nome: ${message.name} quantidade:${message.quantity} valor:${message.value * message.quantity}`;
 
                 divNode.appendChild(liNode)
                 divNode.appendChild(minusTrashNode)

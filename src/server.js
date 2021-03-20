@@ -57,7 +57,7 @@ wss.on("connection", (socket) => {
         const userIndex = users.findIndex(item => item.id === user)
 
         const valorTotal = () => {
-            enviarMensagem('Ta dando ' + users[userIndex].pedido.reduce((total, item) => {
+            enviarMensagem('Valor total: ' + users[userIndex].pedido.reduce((total, item) => {
                 return total + (item.value * item.quantity);
             }, 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), "valorTotal")
         }
