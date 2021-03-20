@@ -70,7 +70,12 @@ wss.on("connection", (socket) => {
                 enviarMensagem(`Bem vindo ao nosso restaurante, Deliciousocket :)`, "inicial")
             }
             enviarMensagem('---------------------------------------------------', "cardapio")
+        }
 
+        if (type === "finalizarPedido") {
+            console.log(`Cliente ${user} finalizou  o pedido`);
+            enviarMensagem(`Tudo certo, estamos levando até você`, "info")
+            users.splice(userIndex,1)
         }
 
         if (type === "consultarCardapio") {

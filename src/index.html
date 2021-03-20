@@ -10,23 +10,21 @@
 </head>
 
 <body>
-    <div style="display: flex;flex-direction: row;">
+    <div id="divPedido" style="display: flex;flex-direction: row;">
         <div style="display: flex;flex-direction: column;">
-            <div id="inicial">
-            </div>
+            <div id="inicial"></div>
             <input id="btnConsultarCardapio" type="button" onclick="btnConsultarCardapio()" value="Consultar Cardápio">
-            <div id="cardapio">
-            </div>
-            <div  style="margin-top: 30px;" id="btnFazerPedido">
-
-            </div>
+            <div id="cardapio"></div>
+            <div style="margin-top: 30px;" id="btnFazerPedido"></div>
         </div>
         <div style="margin-left: 30px;">
             <ul id="carrinho"></ul>
             <div id="valorTotal"></div>
+            <!-- <input id="FinalizarPedido" type="button" onclick="finalizarPedido()" value="Finalizar Pedido"> -->
         </div>
-        <div>
-        </div>
+        <div></div>
+    </div>
+    <div id="finalizado"></div>
 </body>
 <script>
     var HOST = location.origin.replace(/^http/, 'ws');
@@ -88,17 +86,19 @@
             var element = document.getElementById(`li-carrinho-item-${message.index}`)
 
             if (element) {
-                element.innerHTML = `Produto: ${message.name}. Quantidade: ${message.quantity} Valor:${(message.value * message.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                element.innerHTML = `Produto: ${message.name} - Quantidade: ${message.quantity} - Valor: ${(message.value * message.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
             }
 
             var text = element.innerHTML
 
-            var quantidade = (text.slice(text.indexOf("Quantidade"), text.indexOf("valor")))
+            var quantidade = text.split('-')[1]
             quantidade = quantidade.slice(quantidade.indexOf(":") + 1, quantidade.length - 1)
 
-            if (quantidade === "0") {
+            if (Number(quantidade) === 0) {
                 element.parentNode.parentNode.removeChild(element.parentNode)
+                verificarCarrinho()
             }
+
         }
 
         if (type === "carrinho") {
@@ -107,7 +107,7 @@
             var element = document.getElementById(`li-carrinho-item-${message.index}`)
 
             if (element) {
-                element.innerHTML = `Produto: ${message.name} Quantidade:${message.quantity} Valor:${(message.value * message.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                element.innerHTML = `Produto: ${message.name} - Quantidade: ${message.quantity} - Valor: ${(message.value * message.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
             }
 
             if (!element) {
@@ -122,6 +122,7 @@
                     enviarMensagem({ message_: message.index, user: id }, 'excluir')
 
                     minhaDiv.removeChild(buttonTrashNode.parentNode)
+                    verificarCarrinho()
                 }
 
                 minusTrashNode.setAttribute("class", "fa fa-minus")
@@ -129,25 +130,118 @@
 
                 minusTrashNode.onclick = function () {
                     enviarMensagem({ message_: message.index, user: id }, 'diminuir')
+                    verificarCarrinho()
                 }
 
                 liNode.setAttribute("class", "li-carrinho")
                 liNode.setAttribute("id", `li-carrinho-item-${message.index}`)
-                liNode.innerHTML = `Produto: ${message.name} Quantidade:${message.quantity} Valor:${(message.value * message.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                liNode.innerHTML = `Produto: ${message.name} - Quantidade: ${message.quantity} - Valor: ${(message.value * message.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
 
                 // liNode.innerHTML = `nome: ${message.name} quantidade:${message.quantity} valor:${message.value * message.quantity}`;
+                // <input id="FinalizarPedido" type="button" onclick="finalizarPedido()" value="Finalizar Pedido">
 
                 divNode.appendChild(liNode)
                 divNode.appendChild(minusTrashNode)
                 divNode.appendChild(buttonTrashNode)
 
                 minhaDiv.appendChild(divNode);
+
+                if (minhaDiv.childElementCount === 1) {
+                    var FinalizarPedido = document.createElement("input")
+                    FinalizarPedido.setAttribute('value', 'Finalizar Pedido')
+                    FinalizarPedido.setAttribute('type', 'button')
+                    FinalizarPedido.onclick = function(){
+                        finalizarPedido()
+                    }
+
+                    minhaDiv.parentNode.appendChild(FinalizarPedido);
+                }
+
+                verificarCarrinho()
             }
         }
     }
 
     const enviarMensagem = (message, type) => {
         socket.send(JSON.stringify({ message: message, type: type }));
+    }
+
+    const finalizarPedido = () => {
+        enviarMensagem({ message_: '', user: id }, 'finalizarPedido')
+        var divPedido = document.querySelector("#divPedido");
+        var ul = document.querySelector("#carrinho");
+        var finalizado = document.querySelector("#finalizado");
+        divPedido.parentNode.removeChild(divPedido)
+        var filhos = ul.childNodes;
+
+        var NewUl = document.createElement("ul")
+        var mgsFinish = document.createElement("div")
+        var horaDiv = document.createElement("div")
+        var newPedido = document.createElement("input")
+        mgsFinish.innerHTML = 'Produto Finalizado'
+        newPedido.setAttribute('value', 'Fazer Novo pedido')
+        newPedido.setAttribute('type', 'button')
+        newPedido.onclick = function () {
+            document.location.reload(true)
+        }
+
+        finalizado.appendChild(newPedido)
+        finalizado.appendChild(NewUl)
+        hora = Math.floor(Math.random() * (2 - 0)) + 0
+        minuto = Math.floor(Math.random() * (59 - 1)) + 1
+        console.log(hora, minuto)
+
+        horaDiv.innerHTML = `Seu pedido vai chegar em ${hora !== 0 ? hora === 1 ? hora + ' hora e ' : hora + ' horas e ' : ''} ${minuto} minutos`
+
+
+        finalizado.appendChild(horaDiv)
+
+        for (let i = 0; i < filhos.length; i++) {
+            var Newli = document.createElement("li")
+            var text = filhos[i].firstChild.innerHTML.split('-')
+
+            var produto = text[0]
+            var quantidade = text[1]
+            var valor = text[2]
+
+            quantidade = quantidade.slice(quantidade.indexOf(":") + 1, quantidade.length - 1)
+            produto = produto.slice(produto.indexOf(":") + 1, produto.length - 1)
+            valor = Number((valor.slice(valor.indexOf(";") + 1, valor.length - 1)).replace(',', '.')).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            Newli.innerHTML = `Produto: ${produto} - Quantidade: ${quantidade} - Valor: ${valor}`;
+            NewUl.appendChild(Newli)
+        }
+
+        finalizado.appendChild(NewUl)
+        finalizado.appendChild(newPedido)
+    }
+
+    const verificarCarrinho = () => {
+        var ul = document.querySelector("#carrinho");
+        var divValorTotal = document.querySelector("#valorTotal");
+        var divFinalizarPedido = document.querySelector("#FinalizarPedido");
+        var divCarrinho = document.querySelector("#carrinho");
+
+        if (ul.childElementCount === 0) {
+            divValorTotal.parentNode.removeChild(divValorTotal)
+            divFinalizarPedido.parentNode.removeChild(divFinalizarPedido)
+        } else {
+            if (!divFinalizarPedido) {
+                var divNode = document.createElement("div")
+                divNode.setAttribute("id", "valorTotal")
+                divCarrinho.parentNode.appendChild(divNode)
+            }
+            if (!divValorTotal) {
+                var divNode = document.createElement("input")
+                divNode.setAttribute("id", "FinalizarPedido")
+                divNode.setAttribute("type", "button")
+                divNode.setAttribute("value", "Finalizar Pedido")
+                divNode.onclick = () => {
+                    finalizarPedido()
+                }
+                divCarrinho.parentNode.appendChild(divNode)
+            }
+        }
+
     }
 
     const fazerSugestao = () => {
@@ -173,6 +267,7 @@
 
         inputElement1.setAttribute('type', 'text')
         inputElement1.setAttribute('id', 'fazerPedido')
+        inputElement1.setAttribute('onkeypress', 'return event.charCode >= 48 && event.charCode <= 57')
         inputElement2.setAttribute('type', 'button')
         inputElement2.setAttribute('value', 'fazer')
         div.setAttribute('id', 'texto')
@@ -189,8 +284,6 @@
         var btnConsultarCardapio = document.querySelector("#btnConsultarCardapio");
         btnConsultarCardapio.parentNode.removeChild(btnConsultarCardapio)
     }
-
-
 </script>
 
 </html>
