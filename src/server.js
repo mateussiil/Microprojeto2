@@ -38,28 +38,15 @@ const foods = [
 
 const users = []
 
-let pedido = []
-
-
 // evento que ocorre quando um cliente se conectar neste servidor
 wss.on("connection", (socket) => {
     // imprime uma mensagem quando um cliente conectar
-    console.log("Cliente conectado!");
-
     const enviarMensagem = (message, type, objeto) => {
         socket.send(JSON.stringify({
             message: message,
             type: type
         }))
     }
-    enviarMensagem('Bem vindo ao restaurante, Deliciousocket :)', "cardapio")
-    enviarMensagem('---------------------------------------------------', "cardapio")
-    enviarMensagem('Digite o número correspondente ao seu pedido :)', "cardapio")
-    enviarMensagem('---------------------------------------------------', "cardapio")
-
-    foods.map(item => {
-        enviarMensagem(`${item.index} - ${item.name} - Valor: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, "cardapio")
-    })
 
     socket.on("message", (message_stringfy) => {
 
@@ -67,11 +54,10 @@ wss.on("connection", (socket) => {
         var message = message_parse.message
         var type = message_parse.type
 
-        const { message_, user} = message
+        const { message_, user } = message
         const userIndex = users.findIndex(item => item.id === user)
 
-
-        const valorTotal = () =>{
+        const valorTotal = () => {
             enviarMensagem('Ta dando ' + users[userIndex].pedido.reduce((total, item) => {
                 return total + (item.value * item.quantity);
             }, 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), "valorTotal")
@@ -79,6 +65,21 @@ wss.on("connection", (socket) => {
 
         if (type === "newUser") {
             users.push({ ...message, pedido: [] })
+            if (!!message.name) {
+                enviarMensagem(`Querido ${message.name}, Bem vindo ao nosso restaurante, Deliciousocket :)`, "inicial")
+            } else {
+                enviarMensagem(`Bem vindo ao nosso restaurante, Deliciousocket :)`, "inicial")
+            }
+            enviarMensagem('---------------------------------------------------', "cardapio")
+
+        }
+
+        if (type === "consultarCardapio") {
+            enviarMensagem('Digite o número correspondente ao seu pedido :)', "cardapio")
+            enviarMensagem('---------------------------------------------------', "cardapio")
+            foods.map(item => {
+                enviarMensagem(`${item.index} - ${item.name} - Valor: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, "cardapio")
+            })
         }
 
         if (type === "sugestao") {
@@ -131,12 +132,5 @@ wss.on("connection", (socket) => {
                 valorTotal()
             }
         }
-
-
-   
-        // envia a mensagem para todos os clientes conectados
-        // wss.clients.forEach((client) => {
-        //     client.send(message);
-        // });
     });
 });

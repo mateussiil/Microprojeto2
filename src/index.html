@@ -12,18 +12,18 @@
 <body>
     <div style="display: flex;flex-direction: row;">
         <div style="display: flex;flex-direction: column;">
+            <div id="inicial">
+            </div>
+            <input id="btnConsultarCardapio" type="button" onclick="btnConsultarCardapio()" value="Consultar Cardápio">
             <div id="cardapio">
             </div>
             <div style="margin-top: 30px;">
                 Opa, tem uma sugestao pro cardápio? insira aqui:
                 <input id="fazerSugestao" type="text">
-                <input id="botao" type="button" onclick="fazerSugestao()" value="ok">
+                <input type="button" onclick="fazerSugestao()" value="ok">
             </div>
-            <div style="margin-top: 30px;">
-                Pedido:
-                <input id="fazerPedido" type="text">
-                <input id="botao" type="button" onclick="fazerPedido()" value="Ok">
-                <div id="texto"></div>
+            <div id="btnFazerPedido">
+
             </div>
         </div>
         <div style="margin-left: 30px;">
@@ -50,8 +50,10 @@
     const name = prompt('Bem vindo a Delisciousocket, deseja se identificar? Caso não queira, deixe vazio')
     const id = create_UUID()
 
+    let consultarCardapio = false;
+
     socket.onopen = () => {
-        enviarMensagem({ id: id, name: name ? name : " " }, 'newUser')
+        enviarMensagem({ id: id, name: name ? name : "" }, 'newUser')
     }
 
     socket.onmessage = (message_stringfy) => {
@@ -61,6 +63,14 @@
 
         if (type === "cardapio") {
             var minhaDiv = document.querySelector("#cardapio");
+            console.log(message)
+            var textNode = document.createElement("div");
+            textNode.innerHTML = `${message}`;
+            minhaDiv.appendChild(textNode);
+        }
+
+        if (type === "inicial") {
+            var minhaDiv = document.querySelector("#inicial");
 
             var textNode = document.createElement("div")
             textNode.innerHTML = `${message}`;
@@ -146,13 +156,50 @@
 
     const fazerSugestao = () => {
         var caixaDeTexto = document.querySelector("#fazerSugestao");
-        enviarMensagem({message_: caixaDeTexto.value, user:id}, 'sugestao')
+        enviarMensagem({ message_: caixaDeTexto.value, user: id }, 'sugestao')
     }
 
     const fazerPedido = () => {
         var caixaDeTexto = document.querySelector("#fazerPedido");
-        enviarMensagem({message_: caixaDeTexto.value, user:id}, 'escolher')
+        enviarMensagem({ message_: caixaDeTexto.value, user: id }, 'escolher')
+
     }
+
+    const btnConsultarCardapio = () => {
+        enviarMensagem({ message_: '', user: id }, 'consultarCardapio')
+
+        var minhaDiv = document.querySelector("#btnFazerPedido");
+        minhaDiv.innerHTML = 'Fazer Pedido:'
+
+        var inputElement1 = document.createElement("input")
+        var inputElement2 = document.createElement("input")
+        var div = document.createElement("div")
+        console.log(inputElement1)
+        console.log(inputElement2)
+
+        inputElement1.setAttribute('type', 'text')
+        inputElement1.setAttribute('id', 'fazerPedido')
+        inputElement2.setAttribute('type', 'button')
+        inputElement2.setAttribute('value', 'fazer')
+        div.setAttribute('id', 'texto')
+
+        inputElement2.onclick = function () {
+            var caixaDeTexto = document.querySelector("#fazerPedido");
+            enviarMensagem({ message_: caixaDeTexto.value, user: id }, 'escolher')
+        }
+
+        console.log(inputElement1)
+        console.log(inputElement2)
+        console.log(div)
+
+        minhaDiv.appendChild(inputElement1);
+        minhaDiv.appendChild(inputElement2);
+        minhaDiv.appendChild(div);
+
+        var btnConsultarCardapio = document.querySelector("#btnConsultarCardapio");
+        btnConsultarCardapio.parentNode.removeChild(btnConsultarCardapio)
+    }
+
 
 </script>
 
