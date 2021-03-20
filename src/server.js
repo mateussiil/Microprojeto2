@@ -10,7 +10,6 @@ const server = express()
 
 const WebSocket = require("ws");
 
-// cria o objeto do servidor WebSocket
 const wss = new WebSocket.Server({ server });
 
 const foods = [
@@ -66,7 +65,7 @@ wss.on("connection", (socket) => {
         if (type === "newUser") {
             users.push({ ...message, pedido: [] })
             if (!!message.name) {
-                enviarMensagem(`Querido ${message.name}, Bem vindo ao nosso restaurante, Deliciousocket :)`, "inicial")
+                enviarMensagem(`Querido ${message.name}, Bem vindo ao nosso restaurante: Deliciousocket :)`, "inicial")
             } else {
                 enviarMensagem(`Bem vindo ao nosso restaurante, Deliciousocket :)`, "inicial")
             }
