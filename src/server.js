@@ -40,7 +40,7 @@ const users = []
 // evento que ocorre quando um cliente se conectar neste servidor
 wss.on("connection", (socket) => {
     // imprime uma mensagem quando um cliente conectar
-    const enviarMensagem = (message, type, objeto) => {
+    const enviarMensagem = (message, type) => {
         socket.send(JSON.stringify({
             message: message,
             type: type
